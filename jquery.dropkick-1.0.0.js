@@ -183,6 +183,25 @@
     }
   };
 
+  methods.val = function(value) {
+  	var	$select = $(this);
+  	
+  	$.each($select, function(index, item) {
+  		console.log('each ' + index);
+  		var
+  			list 	= $(item).data('dropkick'),
+			$dk		= list.$dk,
+			options = $dk.find('.dk_options'),
+			s_option	= $select.find('option[value=' + value +']').first()
+			$option	= options.find('li [data-dk-dropdown-value=' + value + ']');
+		;
+		
+		_setCurrent(s_option, $dk);
+		_updateFields($option, $dk, true);
+  	});
+  	
+  }
+  
   // Expose the plugin
   $.fn.dropkick = function (method) {
     if (!ie6) {
