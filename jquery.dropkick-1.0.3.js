@@ -2,23 +2,27 @@
  * DropKick
  *
  * Highly customizable <select> lists
- * https://github.com/JamieLottering/DropKick
+ * https://github.com/robdel12/DropKick
  *
  * &copy; 2011 Jamie Lottering <http://github.com/JamieLottering>
  *                        <http://twitter.com/JamieLottering>
- * 
+ *
+ * History:
+ * 2013-02: live > on (joeblynch)
+ * 2013-06: + trigger "change" at update (so one can detect the change) (joeri210)
+ *          + method: "reload" to rebuild the pulldown (when dynamic populated) (joeri210)
  */
 (function ($, window, document) {
 
-  var ie6 = false;
+  var msVersion = navigator.userAgent.match(/MSIE ([0-9]{1,}[\.0-9]{0,})/),
+      msie = !!msVersion,
+      ie6 = msie && parseFloat(msVersion[1]) < 7;
 
   // Help prevent flashes of unstyled content
-  if ($.browser.msie && $.browser.version.substr(0, 1) < 7) {
-    ie6 = true;
-  } else {
+  if (!ie6) {
     document.documentElement.className = document.documentElement.className + ' dk_fouc';
   }
-  
+
   var
     // Public methods exposed to $.fn.dropkick()
     methods = {},
@@ -32,7 +36,8 @@
       'up'    : 38,
       'right' : 39,
       'down'  : 40,
-      'enter' : 13
+      'enter' : 13,
+	'tab'	  : 9
     },
 
     // HTML template for the dropdowns
@@ -112,6 +117,11 @@
       // Build the dropdown HTML
       $dk = _build(dropdownTemplate, data);
 
+      // Make the dropdown fixed width if desired
+      $dk.find('.dk_toggle').css({
+        'width' : width + 'px'
+      });
+
       // Hide the <select> list and place our new one in front of it
       $select.before($dk);
 
@@ -178,25 +188,16 @@
     }
   };
 
-  methods.val = function(value) {
-  	var	$select = $(this);
-  	
-  	$.each($select, function(index, item) {
-  		console.log('each ' + index);
-  		var
-  			list 	= $(item).data('dropkick'),
-			$dk		= list.$dk,
-			options = $dk.find('.dk_options'),
-			s_option	= $select.find('option[value=' + value +']').first()
-			$option	= options.find('li [data-dk-dropdown-value=' + value + ']');
-		;
-		
-		_setCurrent(s_option, $dk);
-		_updateFields($option, $dk, true);
-  	});
-  	
-  }
-  
+  // Reload / rebuild, in case of dynamic updates etc.
+  // Credits to Jeremy (http://stackoverflow.com/users/1380047/jeremy-p)
+  methods.reload = function () {
+    var $select = $(this);
+    var data = $select.data('dropkick');
+    $select.removeData("dropkick");
+    $("#dk_container_"+ data.id).remove();
+    $select.dropkick(data.settings);
+  };
+
   // Expose the plugin
   $.fn.dropkick = function (method) {
     if (!ie6) {
@@ -231,6 +232,13 @@
           _openDropdown($dk);
         }
         e.preventDefault();
+      break;
+
+	case keyMap.tab:
+        if(open){
+      	_updateFields(current.find('a'), $dk);
+        	_closeDropdown($dk);
+        }
       break;
 
       case keyMap.up:
@@ -275,7 +283,7 @@
     data  = $dk.data('dropkick');
 
     $select = data.$select;
-    $select.val(value);
+    $select.val(value).trigger('change'); // Added to let it act like a normal select
 
     $dk.find('.dk_label').text(label);
 
@@ -357,7 +365,7 @@
   $(function () {
 
     // Handle click events on the dropdown toggler
-    $('.dk_toggle').live('click', function (e) {
+    $(document).on('click', '.dk_toggle', function (e) {
       var $dk  = $(this).parents('.dk_container').first();
 
       _openDropdown($dk);
@@ -372,17 +380,17 @@
     });
 
     // Handle click events on individual dropdown options
-    $('.dk_options a').live(($.browser.msie ? 'mousedown' : 'click'), function (e) {
+    $(document).on((msie ? 'mousedown' : 'click'), '.dk_options a', function (e) {
       var
         $option = $(this),
         $dk     = $option.parents('.dk_container').first(),
         data    = $dk.data('dropkick')
       ;
-    
+
       _closeDropdown($dk);
       _updateFields($option, $dk);
       _setCurrent($option.parent(), $dk);
-    
+
       e.preventDefault();
       return false;
     });
@@ -411,6 +419,13 @@
       if ($dk) {
         _handleKeyBoardNav(e, $dk);
       }
+    });
+    
+    // Globally handle a click outside of the dropdown list by closing it.
+    $(document).on('click', null, function(e) {
+        if($(e.target).closest(".dk_container").length == 0) {
+            _closeDropdown($('.dk_toggle').parents(".dk_container").first());
+        }
     });
   });
 })(jQuery, window, document);
