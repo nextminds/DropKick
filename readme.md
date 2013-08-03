@@ -1,3 +1,10 @@
+
+Fork from DropKick removing the fixed width
+
+https://github.com/nextminds/DropKick
+
+
+
 Version 2.0 Planning
 =
 We're planning version 2.0 right now. Please if you have suggestions go to the version-2.0 branch and edit the readme with any suggestions you have for features. 

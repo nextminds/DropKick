@@ -1,4 +1,12 @@
 /**
+ *
+ * Fork from DropKick removing the fixed width
+ *
+ * https://github.com/nextminds/DropKick
+ *
+ *
+ * Origin:
+ *
  * DropKick
  *
  * Highly customizable <select> lists
@@ -116,11 +124,6 @@
 
       // Build the dropdown HTML
       $dk = _build(dropdownTemplate, data);
-
-      // Make the dropdown fixed width if desired
-      $dk.find('.dk_toggle').css({
-        'width' : width + 'px'
-      });
 
       // Hide the <select> list and place our new one in front of it
       $select.before($dk);
